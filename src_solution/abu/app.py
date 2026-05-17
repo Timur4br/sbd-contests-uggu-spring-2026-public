@@ -6,49 +6,21 @@ import os
 import uuid
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-try:
-    from src_solution.abu.tcb.event_log import EventLevel, default_log
-    from src_solution.abu.tcb.safety import (
-        enforce_depth_cap,
-        enforce_rpm_cap,
-        should_emergency_stop,
-    )
-    from src_solution.abu.other.pseudo_ai import (
-        anomaly_vibration,
-        regime_suggest,
-        risk_flag,
-    )
-    from src_solution.abu.other.numpy_workflow import smooth_vibration_window
-except ModuleNotFoundError:
-    try:
-        from abu.tcb.event_log import EventLevel, default_log
-        from abu.safety import (
-            enforce_depth_cap,
-            enforce_rpm_cap,
-            should_emergency_stop,
-        )
-        from abu.pseudo_ai import (
-            anomaly_vibration,
-            regime_suggest,
-            risk_flag,
-        )
-        from abu.numpy_workflow import smooth_vibration_window
-    except ModuleNotFoundError:
-        from .tcb.event_log import EventLevel, default_log
-        from .tcb.safety import (
-            enforce_depth_cap,
-            enforce_rpm_cap,
-            should_emergency_stop,
-        )
-        from .other.pseudo_ai import (
-            anomaly_vibration,
-            regime_suggest,
-            risk_flag,
-        )
-        from .other.numpy_workflow import smooth_vibration_window
+from .tcb.event_log import EventLevel, default_log
+from .tcb.safety import (
+    enforce_depth_cap,
+    enforce_rpm_cap,
+    should_emergency_stop,
+)
+from .other.pseudo_ai import (
+    anomaly_vibration,
+    regime_suggest,
+    risk_flag,
+)
+from .other.numpy_workflow import smooth_vibration_window
 
 app = FastAPI(title="АБУ (прототип)", version="0.1.0")
 
@@ -69,6 +41,12 @@ class MissionState(BaseModel):
     pressure: float = 120.0
     vibration_samples: list[float] = Field(default_factory=list)
     status: str = "running"
+
+
+class AISuggestIn(BaseModel):
+    """Вход для псевдо-ИИ подсказки."""
+    depth_m: float = Field(ge=0)
+    torque_nm: float = Field(ge=0)
 
 
 _mission: MissionState | None = None
@@ -99,7 +77,11 @@ def status() -> dict[str, Any]:
     if _mission is None:
         return {"idle": True}
     m = _mission
-    v_score = anomaly_vibration(m.vibration_samples) if m.vibration_samples else 0.0
+    v_score = (
+        anomaly_vibration(m.vibration_samples)
+        if m.vibration_samples
+        else 0.0
+    )
     risk = risk_flag(v_score, m.pressure, m.depth_m)
     return {
         "idle": False,
@@ -126,7 +108,10 @@ def start_mission(body: MissionIn) -> dict[str, Any]:
     )
     default_log.record(
         EventLevel.INFO,
-        f"mission_started mission_id={mid} target_depth_m={body.target_depth_m}"
+        (
+            f"mission_started mission_id={mid} "
+            f"target_depth_m={body.target_depth_m}"
+        ),
     )
     return {"accepted": True, "mission_id": mid}
 
@@ -142,7 +127,6 @@ def current_mission() -> dict[str, Any]:
 @app.post("/api/v1/missions/tick")
 def tick_step() -> dict[str, Any]:
     """Один шаг симуляции."""
-    global _mission
     if _mission is None:
         raise HTTPException(status_code=400, detail="нет миссии")
     m = _mission
@@ -168,7 +152,11 @@ def tick_step() -> dict[str, Any]:
         cap = 300.0
 
     m.rpm = min(rpm_suggest, cap)
-    risk = risk_flag(anomaly_vibration(m.vibration_samples), m.pressure, m.depth_m)
+    risk = risk_flag(
+        anomaly_vibration(m.vibration_samples),
+        m.pressure,
+        m.depth_m,
+    )
 
     if risk == "high":
         default_log.record(
@@ -197,13 +185,10 @@ def tick_step() -> dict[str, Any]:
 
 
 @app.post("/api/v1/ai/suggest")
-def ai_suggest(body: AISuggestIn) -> dict[str, float]:
+def ai_suggest(body: AISuggestIn = Body(...)) -> dict[str, float]:
     """Псевдо-ИИ: рекомендации режима."""
     rpm, feed = regime_suggest(body.depth_m, body.torque_nm)
-    return {"suggested_rpm": rpm, "suggested_feed_mm_rev": feed}
-
-
-class AISuggestIn(BaseModel):
-    """Вход для псевдо-ИИ подсказки."""
-    depth_m: float = Field(ge=0)
-    torque_nm: float = Field(ge=0)
+    return {
+        "suggested_rpm": rpm,
+        "suggested_feed_mm_rev": feed,
+    }

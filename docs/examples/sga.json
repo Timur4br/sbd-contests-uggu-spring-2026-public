@@ -1,0 +1,22 @@
+{
+  "security_goals": [
+    {
+      "id": "SG_ADS_Authorized_critical_commands",
+      "statement": "Only authorized critical commands may change rig or mission state."
+    },
+    {
+      "id": "SG_ADS_Controlled_operations",
+      "statement": "Operations executed by the ABU are controlled, monitored, and follow approved policies."
+    },
+    {
+      "id": "SG_ADS_Security_events_store",
+      "statement": "Security events are recorded and stored for audit and analysis."
+    }
+  ],
+  "security_assumptions": [
+    {
+      "id": "SA_ADS_Trustrworthy_authorized_operators",
+      "statement": "Authorized operators and the operational environment are trusted to use ABU services safely."
+    }
+  ]
+}

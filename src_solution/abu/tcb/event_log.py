@@ -23,7 +23,7 @@ _RING_SIZE = 10
 
 class EventLog:
     """
-    Кольцевой буфер на 10 сообщений, полный журнал в файле и снимок кольца в отдельном файле.
+    Кольцевой буфер на 10 сообщений и полный журнал в файле.
 
     :param log_dir: каталог для abu_events_full.log и abu_events_ring.txt
     """
@@ -49,9 +49,12 @@ class EventLog:
             try:
                 with self._full_path.open("a", encoding="utf-8") as fh:
                     fh.write(line)
-                self._ring_path.write_text("".join(f"{x}\n" for x in self._ring), encoding="utf-8")
+                self._ring_path.write_text(
+                    "".join(f"{x}\n" for x in self._ring),
+                    encoding="utf-8",
+                )
             except OSError:
-                # Не прерываем API/тесты, если файловая система недоступна для записи.
+                # Не прерываем API/тесты, если файловая система недоступна.
                 pass
 
     def ring_snapshot(self) -> list[str]:

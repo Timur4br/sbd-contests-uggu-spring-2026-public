@@ -1,5 +1,8 @@
 {
   "schema_version": 1,
-  "allows": [],
+  "allows": [
+    {"from": "tcb_controller", "to": "tcb_event_log"},
+    {"from": "tcb_controller", "to": "other_pseudo_ai"}
+  ],
   "_note": "Минимальная заготовка: см. references/secure_ipc и docs/schemas/ipc_policies.schema.json при введении ДВБ tcb/other и монитора."
 }

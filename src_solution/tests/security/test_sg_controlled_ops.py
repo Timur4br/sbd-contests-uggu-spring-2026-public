@@ -4,8 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from abu.pseudo_ai import anomaly_vibration, risk_flag
-from abu.safety import should_emergency_stop
+try:
+    from src_solution.abu.tcb.security_monitor import monitor
+    from src_solution.abu.other.pseudo_ai import anomaly_vibration, risk_flag
+    from src_solution.abu.tcb.safety import should_emergency_stop
+except ModuleNotFoundError:
+    from abu.pseudo_ai import anomaly_vibration, risk_flag
+    from abu.safety import should_emergency_stop
+    from abu.tcb.security_monitor import monitor
 
 
 @pytest.mark.security
@@ -20,3 +26,20 @@ def test_anomaly_triggers_attention() -> None:
     """Аномалия вибрации детектируется."""
     s = [1.0] * 5 + [5.0]
     assert anomaly_vibration(s) >= 0.0
+
+
+@pytest.mark.security
+def test_security_monitor_request_response() -> None:
+    """Проверка request/response boundary и политик монитора."""
+    assert monitor.request_response_allowed(
+        "tcb",
+        "other",
+        "read",
+        "ack",
+    ) is True
+    assert monitor.request_response_allowed(
+        "other",
+        "tcb",
+        "read",
+        "ack",
+    ) is False

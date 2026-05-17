@@ -18,24 +18,7 @@
       "version": "0.1.0",
       "bom-ref": "abu-controller",
       "description": "Доверенная вычислительная база (ДВБ) — контроллер АБУ"
-    },
-    {
-      "type": "library",
-      "name": "numpy",
-      "version": "2.0.0",
-      "bom-ref": "pkg:pypi/numpy@2.0.0"
     }
   ],
-  "dependencies": [
-    {
-      "ref": "abu-controller",
-      "dependsOn": [
-        "pkg:pypi/numpy@2.0.0"
-      ]
-    },
-    {
-      "ref": "pkg:pypi/numpy@2.0.0",
-      "dependsOn": []
-    }
-  ]
+  "dependencies": []
 }

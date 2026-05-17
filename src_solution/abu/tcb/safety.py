@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from abu.pseudo_ai import RiskLevel, anomaly_vibration
+from ..other.pseudo_ai import RiskLevel, anomaly_vibration
 
 
 def enforce_depth_cap(depth_m: float, max_depth_m: float) -> bool:

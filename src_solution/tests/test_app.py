@@ -61,7 +61,12 @@ def test_ai_suggest(client: TestClient) -> None:
 @pytest.mark.security
 def test_tick_without_mission(client: TestClient) -> None:
     """Тик без миссии — ошибка."""
+    import sys
+
     app_mod._mission = None
+    for module_name in ("abu.app", "src_solution.abu.app"):
+        if module_name in sys.modules:
+            setattr(sys.modules[module_name], "_mission", None)
     r = client.post("/api/v1/missions/tick")
     assert r.status_code == 400
 

@@ -35,6 +35,12 @@
       "name": "httpx",
       "version": "0.28.0",
       "bom-ref": "pkg:pypi/httpx@0.28.0"
+    },
+    {
+      "type": "library",
+      "name": "numpy",
+      "version": "2.0.0",
+      "bom-ref": "pkg:pypi/numpy@2.0.0"
     }
   ],
   "dependencies": [
@@ -52,6 +58,10 @@
     },
     {
       "ref": "pkg:pypi/httpx@0.28.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/numpy@2.0.0",
       "dependsOn": []
     }
   ]
